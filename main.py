@@ -12,7 +12,7 @@ BAR_COLOR = "#1d4c50"  # Cor padrão para todas as barras
 # Header com logo e título
 col1, col2 = st.columns([1, 3])
 with col1:
-    st.image("Feet/relatorio_pmt/assets/Hectare_Logo.png", width=150)
+    st.image("Hectare_Logo.png", width=150)
 with col2:
     st.title("Risco de Enquadramento")
 st.markdown("---")
