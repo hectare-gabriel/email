@@ -1,0 +1,12 @@
+pandas
+sqlalchemy
+pyodbc
+numpy
+python-dateutil
+streamlit
+matplotlib
+selenium
+pdfkit
+pyppeteer
+sendgrid
+python-dotenv
