@@ -65,7 +65,7 @@ jobs:
           
           # Modo headless do Streamlit
           nohup streamlit run main.py --server.headless true --server.port 8501 &
-          sleep 15  # Aumentei o tempo para garantir que o Streamlit inicie
+          sleep 15
           
           # Gerar PDF
           python -c "
@@ -73,10 +73,7 @@ jobs:
           import os
           from datetime import datetime
           
-          # Criar pasta reports se não existir
           os.makedirs('reports', exist_ok=True)
-          
-          # Gerar nome do arquivo com timestamp
           timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
           pdf_filename = f'reports/risk_report_{timestamp}.pdf'
           
@@ -93,7 +90,7 @@ jobs:
           "
           
       - name: Upload report artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: risk-reports
           path: reports/
