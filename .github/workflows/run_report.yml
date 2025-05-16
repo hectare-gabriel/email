@@ -1,4 +1,4 @@
-name: Generate and Send Risk Report
+name: Generate and Save Risk Report
 
 on:
   schedule:
@@ -55,6 +55,9 @@ jobs:
           print(f'::set-output name=report_date::{date.strftime('%Y-%m-%d')}')
           "
           
+      - name: Create reports directory
+        run: mkdir -p reports
+          
       - name: Run Streamlit and generate PDF
         run: |
           pip install streamlit selenium pdfkit pyppeteer
@@ -67,6 +70,16 @@ jobs:
           # Gerar PDF
           python -c "
           import pdfkit
+          import os
+          from datetime import datetime
+          
+          # Criar pasta reports se não existir
+          os.makedirs('reports', exist_ok=True)
+          
+          # Gerar nome do arquivo com timestamp
+          timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+          pdf_filename = f'reports/risk_report_{timestamp}.pdf'
+          
           options = {
               'page-size': 'A4',
               'margin-top': '0mm',
@@ -75,38 +88,12 @@ jobs:
               'margin-left': '0mm',
               'encoding': 'UTF-8',
           }
-          pdfkit.from_url('http://localhost:8501', 'risk_report.pdf', options=options)
+          pdfkit.from_url('http://localhost:8501', pdf_filename, options=options)
+          print(f'PDF gerado e salvo em: {pdf_filename}')
           "
           
-      - name: Send email
-        run: |
-          pip install sendgrid
-          python -c "
-          from sendgrid import SendGridAPIClient
-          from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
-          import base64
-          import os
-          
-          message = Mail(
-              from_email='gabriel.katsuura@hectare.com.br',
-              to_emails='gabriel.katsuura@hectare.com.br',
-              subject='Relatório de Risco de Enquadramento - ${{ steps.date_calc.outputs.report_date }}',
-              html_content='<p>Segue em anexo o relatório gerado automaticamente.</p>')
-          
-          with open('risk_report.pdf', 'rb') as f:
-              data = f.read()
-              encoded = base64.b64encode(data).decode()
-              
-          attachment = Attachment(
-              FileContent(encoded),
-              FileName('risk_report_${{ steps.date_calc.outputs.report_date }}.pdf'),
-              FileType('application/pdf'),
-              Disposition('attachment'))
-          message.attachment = attachment
-          
-          sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-          response = sg.send(message)
-          print(response.status_code)
-          "
-        env:
-          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: risk-reports
+          path: reports/
