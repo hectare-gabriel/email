@@ -4,6 +4,7 @@ from base import processar_dados
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
+import os
 
 # Configuração inicial
 st.set_page_config(layout="wide")
@@ -17,18 +18,28 @@ with col2:
     st.title("Risco de Enquadramento")
 st.markdown("---")
 
-# Widgets de seleção
-col1, col2 = st.columns(2)
-with col1:
-    today = datetime.date.today()
-    first_day = today.replace(day=1)
-    last_day_prev = first_day - datetime.timedelta(days=1)
-    data_base = st.date_input("Data de Referência", value=last_day_prev, max_value=today)
-with col2:
-    fundo = st.selectbox("Fundo", ["HCTR", "HCHG"])
+# Determinar data base - prioridade: variável de ambiente > seletor no UI
+if 'DATA_BASE' in os.environ:
+    data_base = os.environ['DATA_BASE']
+    st.info(f"Data base definida pelo sistema: {data_base}")
+else:
+    # Se não estiver rodando via GitHub Actions, mostra o seletor de data
+    col1, col2 = st.columns(2)
+    with col1:
+        today = datetime.date.today()
+        first_day = today.replace(day=1)
+        last_day_prev = first_day - datetime.timedelta(days=1)
+        data_base = st.date_input("Data de Referência", value=last_day_prev, max_value=today)
+    with col2:
+        fundo = st.selectbox("Fundo", ["HCTR", "HCHG"])
+    data_base = str(data_base)  # Converte para string no formato YYYY-MM-DD
 
-# Processar e filtrar dados
-df_vortx, df_pl, df_fundos = processar_dados(str(data_base))
+# Processar dados (a função processar_dados agora lida com a data automaticamente)
+df_vortx, df_pl, df_fundos = processar_dados(data_base)
+
+if 'fundo' not in locals():  # Se fundo não foi definido (modo automático)
+    fundo = "HCTR"  # Ou outro valor default
+
 df_vortx_filtrado = df_vortx[df_vortx["Carteira"] == fundo]
 df_pl_filtrado = df_pl[df_pl["Carteira"] == fundo]
 
